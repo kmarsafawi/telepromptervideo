@@ -1,0 +1,8 @@
+{
+  "name": "voice-teleprompter-ios",
+  "version": "2.0.0",
+  "description": "Standalone voice-tracking teleprompter for iOS Safari (static site, no server)",
+  "type": "module",
+  "private": true,
+  "scripts": { "test": "node --test test/*.test.js" }
+}

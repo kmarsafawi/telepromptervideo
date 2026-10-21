@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Voice Teleprompter</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prompter">
+<meta name="description" content="Voice-tracking teleprompter for iPhone and iPad">
+<meta name="theme-color" content="#000000">
+<meta name="format-detection" content="telephone=no">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ Library ============ -->
+<main id="library">
+  <header class="lib-head">
+    <h1>Teleprompter</h1>
+    <button id="btnLibSettings" class="btn ghost" aria-label="Settings">Settings</button>
+  </header>
+
+  <p id="notice" class="notice" hidden></p>
+  <div id="installHint" class="notice info" hidden>
+    <span>Tip: tap <b>Share</b> → <b>Add to Home Screen</b>. You get full-screen mode, offline use, and Safari won't clear your scripts.</span>
+    <button id="hintClose" class="hint-close" aria-label="Dismiss">✕</button>
+  </div>
+
+  <ul id="list" class="list" aria-label="Scripts"></ul>
+  <p id="empty" class="muted" hidden>No scripts yet. Paste one below, or upload a .txt / .md file from the Files app.</p>
+
+  <div class="row">
+    <button id="btnNew" class="btn">+ New / paste</button>
+    <label class="btn" for="fileIn">Upload .txt / .md / backup</label>
+    <input id="fileIn" type="file" accept=".txt,.md,.markdown,.json,text/plain,text/markdown,application/json" hidden>
+    <button id="btnExport" class="btn ghost">Export backup</button>
+  </div>
+
+  <button id="btnStart" class="btn primary big" disabled>Start</button>
+  <p class="muted small">Tip: tap Start, allow the microphone, then read. Tap the middle of the screen to pause.</p>
+</main>
+
+<!-- ============ Editor ============ -->
+<div id="editor" class="sheet" hidden>
+  <div class="sheet-body">
+    <h2 id="edHeading">New script</h2>
+    <input id="edTitle" class="field" type="text" placeholder="Title" autocomplete="off">
+    <textarea id="edText" class="field" placeholder="Paste or type your script here…" rows="12"></textarea>
+    <label class="btn ghost" for="edFile">Load from .txt / .md</label>
+    <input id="edFile" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" hidden>
+    <div class="row">
+      <button id="edSave" class="btn primary">Save</button>
+      <button id="edDelete" class="btn danger" hidden>Delete</button>
+      <button id="edCancel" class="btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Reader ============ -->
+<section id="reader" hidden>
+  <div id="scroller"><div id="text"></div></div>
+  <div id="marker" aria-hidden="true"></div>
+
+  <header id="topbar" class="controls">
+    <button id="btnBack" class="btn">‹ Back</button>
+    <button id="btnRestart" class="btn">↺ Restart</button>
+    <button id="btnSentence" class="btn">↑ Sentence</button>
+    <select id="mode" class="btn" aria-label="Mode">
+      <option value="voice">Voice</option>
+      <option value="scroll">Auto-scroll</option>
+    </select>
+    <button id="btnCam" class="btn" aria-label="Record video">🎥 Off</button>
+    <span id="status" class="pill">Paused</span>
+    <button id="btnSettings" class="btn" aria-label="Settings">⚙</button>
+  </header>
+
+  <div id="recBadge" class="rec-badge" hidden>
+    <span class="dot"></span><span id="recTime">0:00</span>
+  </div>
+  <video id="camPreview" class="cam-preview" muted playsinline autoplay hidden></video>
+
+  <footer id="bottombar" class="controls">
+    <label id="wpmWrap" class="wpm" hidden>
+      <span id="wpmVal">150 wpm</span>
+      <input id="wpm" type="range" min="40" max="300" step="5" data-key="wpm">
+    </label>
+    <button id="btnPlay" class="btn primary big">Start</button>
+    <span id="prog" class="pill">0%</span>
+  </footer>
+
+  <div id="resume" class="overlay" hidden>
+    <div class="overlay-box">
+      <p id="resumeMsg">Paused while the screen was off.</p>
+      <button id="btnResume" class="btn primary big">Resume</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Settings ============ -->
+<div id="settings" class="sheet" hidden>
+  <div class="sheet-body">
+    <h2>Settings</h2>
+    <label class="set">Font size <input type="range" min="20" max="120" step="2" data-key="fontSize"></label>
+    <label class="set">Line spacing <input type="range" min="1.1" max="2.4" step="0.05" data-key="lineHeight"></label>
+    <label class="set">Side margins <input type="range" min="0" max="20" step="1" data-key="margin"></label>
+    <label class="set">Auto-scroll speed <input type="range" min="40" max="300" step="5" data-key="wpm"></label>
+    <label class="set inline">Mirror horizontally <input type="checkbox" data-key="mirror"></label>
+    <label class="set inline">Show position marker <input type="checkbox" data-key="marker"></label>
+    <label class="set inline">Record video while reading <input type="checkbox" data-key="record"></label>
+    <label class="set inline">Camera
+      <select data-key="camera" class="field slim"><option value="user">Front</option><option value="environment">Back</option></select>
+    </label>
+    <label class="set inline">Theme
+      <select data-key="theme" class="field slim"><option value="dark">Dark</option><option value="light">Light</option></select>
+    </label>
+    <label class="set inline">Recognition language
+      <select data-key="lang" id="langSel" class="field slim"></select>
+    </label>
+    <button id="btnSettingsClose" class="btn primary">Done</button>
+  </div>
+</div>
+
+<!-- ============ Recording review ============ -->
+<div id="review" class="sheet" hidden>
+  <div class="sheet-body">
+    <h2>Your recording</h2>
+    <p class="muted small" id="reviewNote"></p>
+    <div id="reviewList"></div>
+    <div class="row">
+      <button id="reviewDiscard" class="btn danger">Discard</button>
+      <button id="reviewClose" class="btn ghost">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<video id="nosleep" muted playsinline loop aria-hidden="true" tabindex="-1" src="nosleep.mp4"></video>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
